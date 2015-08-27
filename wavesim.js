@@ -19,6 +19,7 @@ var WaveSim = (function(){
 	 */
 	var WaveSim = function(conf){
 		this.conf = conf || WaveSim.Conf.SWIMMING_POOL;
+		this.isPaused = false;
 		this.canvas = document.createElement('canvas');
 		this.canvas.style.position = 'fixed';
 		this.canvas.style.top = '0';
@@ -29,6 +30,10 @@ var WaveSim = (function(){
 		window.onresize = syncCanvasSize.bind(this);
 		syncCanvasSize.call(this);
 		document.body.appendChild(this.canvas);
+		// If interactive, add mouse handler
+		if(this.conf.interactive){
+			addHandlers.call(this);
+		}
 	};
 
 
@@ -63,7 +68,7 @@ var WaveSim = (function(){
 	 * Stop the current simulation. The WaveSim instance can be used
 	 * to start a new simulation again with the start method, passing
 	 * a new WaveModel configuration object.
-	 * 
+	 *
 	 * @method stop
 	 */
 	WaveSim.prototype.stop = function(){
@@ -75,12 +80,32 @@ var WaveSim = (function(){
 
 
 	/**
+	 * Add a ripple with the given properties. Convenience method for
+	 * mouse handlers.
+	 *
+	 * @method addRipple
+	 * @param {Object} pos The wave model grid position
+	 * @param {Number} delay The mouse press delay in milliseconds
+	 */
+	WaveSim.prototype.addRipple = function(pos, delay){
+		if(!this.waveModel){ return; }
+		var ripple = new Ripple(this.waveModel);
+		ripple.r = pos.r;
+		ripple.c = pos.c;
+		ripple.wavelength = ~~Utils.boundVal((delay / 20) + 10, 10, 50); // 1 second for max wavelength
+		ripple.mag = Utils.boundVal((delay / 40) + 5, 5, 50); // 2 seconds for max magnitude
+		this.waveModel.insertRipple(ripple);
+	};
+
+
+	/**
 	 * Execute a single step of the wave simulation.
-	 * 
+	 *
 	 * @method step
 	 * @private
 	 */
 	var step = function(){
+		if(this.isPaused){ return; }
 		// Apply ripple forces
 		this.waveModel.genForces();
 		// Execute single step of the wave model
@@ -106,7 +131,7 @@ var WaveSim = (function(){
 
 	/**
 	 * Draws a single squre to the canvas.
-	 * 
+	 *
 	 * @method drawSquare
 	 * @param {Number} r The model row number
 	 * @param {Number} c The model column number
@@ -159,22 +184,81 @@ var WaveSim = (function(){
 	};
 
 
+	/**
+	 * Add event handlers to allow manually generated waves and pausing
+	 *
+	 * @method addHandlers
+	 * @private
+	 */
+	var addHandlers = function(){
+		var self = this, clickTime, releaseTime, pos;
+		self.canvas.onmousedown = function(e){
+			clickTime = new Date().getTime();
+			pos = toGridPos.call(self, e.clientX, e.clientY);
+		};
+		self.canvas.onmouseup =function(){
+			if(!clickTime){ return; }
+			releaseTime = new Date().getTime();
+			self.addRipple(pos, releaseTime - clickTime);
+			clickTime = 0;
+			pos = null;
+		};
+		// If the mouse moves out of the cell that it is generating a ripple
+		// for, then release the current one and start a new one
+		self.canvas.onmousemove = function(e){
+			if(!clickTime){ return; }
+			var p = toGridPos.call(self, e.clientX, e.clientY);
+			if(p.r !== pos.r || p.c !== pos.c){
+				releaseTime = new Date().getTime();
+				self.addRipple(pos, releaseTime - clickTime);
+				clickTime = releaseTime;
+				pos = p;
+			}
+		};
+		// Pause on space
+		document.body.onkeydown = function(e){
+			if(e.keyCode === 32){
+				self.isPaused = !self.isPaused;
+			}
+		};
+	};
+
+
+	/**
+	 * Convert a canvas position to a wave model grid position.
+	 *
+	 * @method toGridPos
+	 * @param {Number} x The canvas x position.
+	 * @param {Number} y The canvas y position.
+	 * @return {Object} A grid position object with attributes r and c
+	 * @private
+	 */
+	var toGridPos = function(x, y){
+		return {
+			r:~~(y * this.conf.rows / this.canvas.height),
+			c:~~(x * this.conf.cols / this.canvas.width)
+		};
+	};
+
+
 	// Preset WaveSim configs, specifies
 	// colour, resolution and sim-step
 	WaveSim.Conf = {
 		SWIMMING_POOL:{
-			baseCol:{r:19, g:128, b:187},
-			opacity:1,
-			stepPeriod:30,
-			rows:200,
-			cols:200
+			interactive : false,
+			baseCol     : {r:19, g:128, b:187},
+			opacity     : 1,
+			stepPeriod  : 30,
+			rows        : 200,
+			cols        : 200
 		},
 		SHIMMER:{
-			baseCol:{r:128, g:128, b:128},
-			opacity:0,
-			stepPeriod:30,
-			rows:200,
-			cols:200
+			interactive : true,
+			baseCol     : {r:128, g:128, b:128},
+			opacity     : 0,
+			stepPeriod  : 50,
+			rows        : 200,
+			cols        : 200
 		}
 	};
 
@@ -190,7 +274,7 @@ var WaveSim = (function(){
 
 /**
  * Represents the simulation state, and operations that update the state.
- * 
+ *
  * @class WaveModel
  */
 var WaveModel = (function(){
@@ -204,7 +288,7 @@ var WaveModel = (function(){
 
 	/**
 	 * Construct a new wave model with the given properties and config.
-	 * 
+	 *
 	 * @constructor
 	 * @param {Number} rows The number of rows in the cellular model.
 	 * @param {Number} cols The number of columns in the cellular model.
@@ -282,7 +366,7 @@ var WaveModel = (function(){
 	 * Normally this should be called before each call to modelStep(),
 	 * but is optional. It may be ommitted for example, when an alternative
 	 * source of disturbance is being used.
-	 * 
+	 *
 	 * @method genForces
 	 */
 	WaveModel.prototype.genForces = function(){
@@ -309,6 +393,17 @@ var WaveModel = (function(){
 		this.ripples = ripples_;
 		this.ripples_ = this.ripples;
 		this.nRipples = j;
+	};
+
+
+	/**
+	 * Manually insert a new ripple into the model.
+	 *
+	 * @method insertRipple
+	 * @param {Ripple} ripple The ripple object to insert
+	 */
+	WaveModel.prototype.insertRipple = function(ripple){
+		this.ripples[this.nRipples++] = ripple;
 	};
 
 
@@ -414,7 +509,7 @@ var Ripple = (function(){
 
 	/**
 	 * Create a new ripple that operates on a single model cell.
-	 * 
+	 *
 	 * @constructor
 	 * @param {WaveModel} model The wave model the ripple is acting on.
 	 */
@@ -466,7 +561,7 @@ var Ripple = (function(){
 
 /**
  * A collection of additional utilities.
- * 
+ *
  * @class Utils
  */
 var Utils = (function(){
@@ -478,7 +573,7 @@ var Utils = (function(){
 
 	/**
 	 * Initialises a two-dimensional number array with the given value.
-	 * 
+	 *
 	 * @method numArray2D
 	 * @param {Number} rows The number of rows in 2D grid.
 	 * @param {Number} cols The number of columns in 2D grid.
@@ -495,7 +590,7 @@ var Utils = (function(){
 
 	/**
 	 * Initialises a simple number array with the given value.
-	 * 
+	 *
 	 * @method numArray2D
 	 * @param {Number} size The array length
 	 * @param {Number} val The numeric value to initialise the array with.
@@ -510,7 +605,7 @@ var Utils = (function(){
 
 	/**
 	 * Calculate the modulus of a number.
-	 * 
+	 *
 	 * @method mod
 	 * @param {Number} n The number to calculate the modulus for
 	 * @param {Number} m Calculate to mod m

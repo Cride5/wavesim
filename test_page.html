@@ -9,17 +9,18 @@
 			// On page load, create wavesim and start simulation
 			window.addEventListener('load', function(){
 				var sim = new WaveSim({
-					baseCol:{r:49, g:59, b:67},
-					opacity:0.0,
-					stepPeriod:50,
-					rows:100,
-					cols:100
+					interactive : true,
+					baseCol     : {r:49, g:59, b:67},
+					opacity     : 0.0,
+					stepPeriod  : 50,
+					rows        : 100,
+					cols        : 100
 				});
 				sim.start({
 					isTorus    : false,
 					ripples    : -1,
 					wavelength : 20,
-					magnitude  : 60,
+					magnitude  : 20,
 					damping    : 0.02,
 					spawnCol   : 0.95,
 					spawnRow   : 0.03,
