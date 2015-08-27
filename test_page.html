@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>WaveSim Test</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<script type="text/javascript" src="wavesim.js"></script>
+		<script type="text/javascript">
+			// On page load, create wavesim and start simulation
+			window.addEventListener('load', function(){
+				var sim = new WaveSim({
+					baseCol:{r:49, g:59, b:67},
+					opacity:0.0,
+					stepPeriod:50,
+					rows:100,
+					cols:100
+				});
+				sim.start({
+					isTorus    : false,
+					ripples    : -1,
+					wavelength : 20,
+					magnitude  : 60,
+					damping    : 0.02,
+					spawnCol   : 0.95,
+					spawnRow   : 0.03,
+				});
+			}, false );
+		</script>
+		<style type="text/css">
+			body{
+				font-family:Verdana;
+				color:grey;
+				margin:20px 100px;
+				
+			}
+			h1{
+				text-align:center;
+			}
+			p{
+				line-height: 2;
+				width:60%;
+				margin:20px auto;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Computational fluid dynamics</h1>
+		<p>Computational fluid dynamics, usually abbreviated as CFD, is a branch of fluid mechanics that uses numerical analysis and algorithms to solve and analyze problems that involve fluid flows. Computers are used to perform the calculations required to simulate the interaction of liquids and gases with surfaces defined by boundary conditions. With high-speed supercomputers, better solutions can be achieved. Ongoing research yields software that improves the accuracy and speed of complex simulation scenarios such as transonic or turbulent flows. Initial experimental validation of such software is performed using a wind tunnel with the final validation coming in full-scale testing, e.g. flight tests.</p>
+	</body>
+</html>
