@@ -1,4 +1,28 @@
 /**
+ * An analog cellular automaton model of fluid surface dynamics.
+ *
+ *
+ * Copyright (C) 2015  Conrad Rider  <cride5@crider.co.uk>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @module wavesim
+ */
+
+
+/**
+ *
  * Top level class, contains the simulation model and manages the canvas
  * drawing and simulation coordination.
  *
@@ -20,6 +44,7 @@ var WaveSim = (function(){
 	var WaveSim = function(conf){
 		this.conf = conf || WaveSim.Conf.SWIMMING_POOL;
 		this.isPaused = false;
+		this.isProcessing = false;
 		this.canvas = document.createElement('canvas');
 		this.canvas.style.position = 'fixed';
 		this.canvas.style.top = '0';
@@ -105,7 +130,8 @@ var WaveSim = (function(){
 	 * @private
 	 */
 	var step = function(){
-		if(this.isPaused){ return; }
+		if(this.isPaused || this.isProcessing){ return; }
+		this.isProcessing = true;
 		// Apply ripple forces
 		this.waveModel.genForces();
 		// Execute single step of the wave model
@@ -126,6 +152,7 @@ var WaveSim = (function(){
 				drawSquare.call(this, r, c, clr, alpha < 1);
 			}
 		}
+		this.isProcessing = false;
 	};
 
 
