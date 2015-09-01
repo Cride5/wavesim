@@ -2,7 +2,7 @@
  * An analog cellular automaton model of fluid surface dynamics.
  *
  *
- * Copyright (C) 2015  Conrad Rider  <cride5@crider.co.uk>
+ * Copyright (C) 2015  Conrad Rider  <www.crider.co.uk>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
