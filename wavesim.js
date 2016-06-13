@@ -391,7 +391,7 @@ var WaveModel = (function(){
 	/**
 	 * Generate forces applied to each cell from outside influences.
 	 * Normally this should be called before each call to modelStep(),
-	 * but is optional. It may be ommitted for example, when an alternative
+	 * but is optional. It may be omitted for example, when an alternative
 	 * source of disturbance is being used.
 	 *
 	 * @method genForces
